@@ -1,0 +1,32 @@
+.recipe-page {
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 12px;
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  &__image {
+    width: 100%;
+    max-height: 400px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  ul {
+    padding-left: 1.5rem;
+    li {
+      margin-bottom: 0.3rem;
+    }
+  }
+}

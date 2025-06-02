@@ -1,0 +1,102 @@
+.burger-menu__button {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  margin-left: 1rem;
+}
+
+.burger-menu__icon {
+  font-size: 2rem;
+}
+
+.burger-menu__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.burger-menu__drawer {
+  background: #fff;
+  width: 90vw;
+  max-width: 1200px; /* разумная ширина */
+  height: 100vh;
+  padding: 2rem;
+  box-shadow: -2px 0 16px rgba(0, 0, 0, 0.12);
+  position: relative;
+  overflow-y: auto;
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.burger-menu__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+}
+
+.burger-menu__nav {
+  margin-top: 2.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.burger-menu__category {
+  width: 250px;
+  padding: 2rem;
+  background: #fdfdfd;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s;
+}
+
+.burger-menu__category:hover {
+  transform: translateY(-3px);
+}
+
+.burger-menu__category-title {
+  font-weight: bold;
+  font-size: 1.8rem;
+  margin-bottom: 0.7rem;
+  font-family: "Playfair Display", serif;
+}
+
+.burger-menu__sublist {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.burger-menu__sublist li {
+  margin-bottom: 0.3rem;
+}
+
+.burger-menu__sublist a {
+  color: #333;
+  text-decoration: none;
+  font-size: 1.2rem;
+  transition: color 0.5s;
+  font-family: "Playfair Display", serif;
+}
+
+.burger-menu__sublist a:hover {
+  color: #ff6600;
+}
