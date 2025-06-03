@@ -1,12 +1,21 @@
 import React from "react";
 import "./FilterDropdown.scss";
 
-const FilterDropdown = () => (
-  <select className="filter-dropdown">
-    <option value="">All difficulties</option>
-    <option value="easy">Easy</option>
-    <option value="medium">Medium</option>
-    <option value="hard">Hard</option>
+type FilterDropdownProps = {
+  value: string;
+  onChange: (v: string) => void;
+};
+
+const FilterDropdown: React.FC<FilterDropdownProps> = ({ value, onChange }) => (
+  <select
+    className="filter-dropdown"
+    value={value}
+    onChange={(e) => onChange(e.target.value)}
+  >
+    <option value="">Все сложности</option>
+    <option value="easy">Легко</option>
+    <option value="medium">Средне</option>
+    <option value="hard">Сложно</option>
   </select>
 );
 

@@ -1,36 +1,50 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ProductContext } from "../components/context/index";
-import axios from "axios";
 
 type RecipeType = {
   id: number | string;
   title: string;
   image?: string;
-  category?: string;
+  category?: {
+    id: number;
+    name: string;
+  };
+};
+
+type CategoryType = {
+  id: number;
+  name: string;
+  type: number;
 };
 
 const Category = () => {
   const { categoryName } = useParams<{ categoryName: string }>();
-  const { recipes } = useContext(ProductContext) as { recipes: RecipeType[] };
-  const [filtered, setFiltered] = useState<RecipeType[]>([]);
-  const getData = async () => {
-    let data = await axios.get("http://51.20.52.136/ru/category/");
-    console.log("data", data);
+  const { recipes, categories } = useContext(ProductContext) as {
+    recipes: RecipeType[];
+    categories: CategoryType[];
   };
+
+  const [filtered, setFiltered] = useState<RecipeType[]>([]);
+
   useEffect(() => {
-    getData();
-  }, []);
-  useEffect(() => {
-    if (recipes.length > 0 && categoryName) {
+    if (recipes.length > 0 && categories.length > 0 && categoryName) {
+      // Найдём ID категории по имени
+      const matchedCategory = categories.find(
+        (cat) => cat.name.toLowerCase() === categoryName.toLowerCase()
+      );
+
+      if (!matchedCategory) {
+        setFiltered([]);
+        return;
+      }
+
       const byCategory = recipes.filter(
-        (recipe) =>
-          typeof recipe.category === "string" &&
-          recipe.category.toLowerCase() === categoryName.toLowerCase()
+        (recipe) => recipe.category && recipe.category.id === matchedCategory.id
       );
       setFiltered(byCategory);
     }
-  }, [categoryName, recipes]);
+  }, [categoryName, recipes, categories]);
 
   if (!categoryName) return <p>Категория не выбрана</p>;
 

@@ -15,6 +15,7 @@ import AdminPanel from "./pages/Admin/AdminPanel"; // добавим стран�
 import RegisterModal from "./components/RegisterModal/RegisterModal";
 import RecipeList from "./components/RecipeCard/RecipeList";
 import BlogPage from "./pages/BlogPage";
+
 // добавим список рецептов
 function App() {
   let routes = [

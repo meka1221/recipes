@@ -11,6 +11,7 @@ import SearchBar from "./SearchBar";
 
 const Header = () => {
   const [register, setRegister] = useState(false);
+  const [difficulty, setDifficulty] = useState("");
   const [eye, setEye] = useState(false);
   const [eyeRepeat, setEyeRepeat] = useState(false);
   const [login, setLogin] = useState("");
@@ -143,11 +144,11 @@ const Header = () => {
               </NavLink>
               <NavLink to="/blog">Блог</NavLink>
               <NavLink to="/about">О нас</NavLink>
-              <NavLink to="/category">Категории</NavLink>
+              <NavLink to="/recipelist">Список Рецептов</NavLink>
             </nav>
             <div className="header__form">
               <SearchBar />
-              <FilterDropdown />
+              <FilterDropdown value={difficulty} onChange={setDifficulty} />
               <FavoritesIcon />
               <div
                 onClick={() => (currentUser ? logout() : toggleModal())}
