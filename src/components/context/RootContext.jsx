@@ -13,7 +13,7 @@ const RootContext = ({ children }) => {
 
   async function getRecipes() {
     try {
-      const res = await axios.get("http://51.20.52.136/ru/");
+      const res = await axios.get("http://51.20.52.136/ru/recipe");
       setRecipes(res.data);
     } catch (error) {
       console.error("Ошибка при загрузке рецептов:", error);

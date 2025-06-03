@@ -1,5 +1,6 @@
 import React, { useState, useContext } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
 // Update the import path to the correct location of your ProductContext
 // import { ProductContext } from "../ProductContext"; // adjust the path as needed
 import { ProductContext } from "../context/"; // update the path as needed
@@ -9,8 +10,10 @@ interface ProductContextType {
   setModal: (value: boolean) => void;
   setFavorites: (favorites: any) => void;
 }
-
-const Login = () => {
+interface RegisterProps {
+  setModals?: (value: boolean) => void;
+}
+const Login: React.FC<RegisterProps> = ({ setModals }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const { setModal, setFavorites } = useContext(
@@ -22,41 +25,23 @@ const Login = () => {
     e.preventDefault();
     setError(null);
     try {
-      const response = await axios.post(
-        "http://51.20.52.136/ru/auth/token/login/",
-        {
-          username,
-          password,
-        }
-      );
-      const token = response.data.auth_token;
-      // Сохраняем токен в localStorage
-      localStorage.setItem("authToken", token);
+      const response = await axios.post("http://51.20.52.136/ru/login/", {
+        username,
+        password,
+      });
+      const token = response.data;
+      console.log("Токен:", token);
 
-      // Закрываем модальное окно логина (если есть)
-      setModal(false);
+      localStorage.setItem("authToken", JSON.stringify(token));
 
-      // Получаем данные пользователя с новым токеном
-      const userResponse = await axios.get(
-        "http://51.20.52.136/ru/auth/users/me/",
-        {
-          headers: {
-            Authorization: `Token ${token}`,
-          },
-        }
-      );
+      if (setModal) setModal(false);
 
-      console.log("Пользователь:", userResponse.data);
-
-      // Можешь сюда записать данные пользователя в состояние, если нужно
-
-      // Пример: загрузить избранное пользователя (если реализовано на бэке)
-      // const favResponse = await axios.get("http://51.20.52.136/ru/favorite/", {
-      //   headers: { Authorization: `Token ${token}` },
-      // });
-      // setFavorites(favResponse.data);
+      toast.success("Вы успешно вошли в аккаунт!");
+      setModals?.(false); // Закрываем модальное окно
+      // можно здесь также сбросить поля или получить избранное
     } catch (err) {
       setError("Неправильный логин или пароль");
+      toast.error("Неправильный логин или пароль");
       console.error(err);
     }
   };

@@ -2,13 +2,18 @@ import React, { useState } from "react";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
-const Register = () => {
+interface RegisterProps {
+  setModal?: (value: boolean) => void;
+  setRegisterMode?: (value: boolean) => void;
+}
+const Register: React.FC<RegisterProps> = ({ setModal, setRegisterMode }) => {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     password: "",
-    re_password: "",
+    first_name: "",
+    last_name: "",
+    bio: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -18,14 +23,13 @@ const Register = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (formData.password !== formData.re_password) {
-      toast.error("Пароли не совпадают");
-      return;
-    }
-
     try {
-      await axios.post("http://51.20.52.136/auth/users/", formData);
+      await axios.post("http://51.20.52.136/ru/register/", formData);
       toast.success("Регистрация прошла успешно!");
+      setTimeout(() => {
+        setModal?.(false);
+        setRegisterMode?.(false); // переключаем на логин
+      }, 1500); // ждём, пока покажется toast
     } catch (error) {
       console.error(error);
       toast.error("Ошибка при регистрации");
@@ -61,10 +65,26 @@ const Register = () => {
           required
         />
         <input
-          type="password"
-          name="re_password"
-          placeholder="Повторите пароль"
-          value={formData.re_password}
+          type="text"
+          name="first_name"
+          placeholder="Имя"
+          value={formData.first_name}
+          onChange={handleChange}
+          required
+        />
+        <input
+          type="text"
+          name="last_name"
+          placeholder="Фамилия"
+          value={formData.last_name}
+          onChange={handleChange}
+          required
+        />
+        <input
+          type="text"
+          name="bio"
+          placeholder="Биография"
+          value={formData.bio}
           onChange={handleChange}
           required
         />

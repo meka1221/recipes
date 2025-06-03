@@ -8,6 +8,7 @@ type RecipeType = {
   title: string;
   image?: string;
   category?: string;
+  description: string;
 };
 
 const Category = () => {

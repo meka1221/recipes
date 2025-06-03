@@ -5,13 +5,13 @@ import "./HomeWelcome.scss";
 import axios from "axios";
 
 const HomeWelcome = () => {
-  const fetchData = async () => {
-    const { data } = await axios.get("http://51.20.52.136/ru");
-    console.log(data);
-  };
-  useEffect(() => {
-    fetchData();
-  }, []);
+  // const fetchData = async () => {
+  //   const { data } = await axios.get("http://51.20.52.136/ru");
+  //   console.log(data);
+  // };
+  // useEffect(() => {
+  //   fetchData();
+  // }, []);
   return (
     <section id="homeWelcome">
       <video className="homeWelcome__video" autoPlay muted loop playsInline>
