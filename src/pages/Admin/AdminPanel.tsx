@@ -9,11 +9,21 @@ const AdminPanel = () => {
   const navigate = useNavigate();
   const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
 
+  // Защита роута админки
+  useEffect(() => {
+    if (!currentUser?.auth_token) {
+      navigate("/login");
+      toast.error("Необходимо авторизоваться");
+      return;
+    }
+  }, [currentUser, navigate]);
+
   const [newRecipe, setNewRecipe] = useState<{
     title: string;
     description: string;
     prep_time: number;
     difficulty: string;
+    image: string | null;
     servings: number;
     steps: string;
     is_featured: boolean;
@@ -25,12 +35,13 @@ const AdminPanel = () => {
     minerals: string;
     author: number | null;
     category: number;
-    ingredients: string[];
+    ingredients: string;
   }>({
     title: "",
     description: "",
     prep_time: 0,
     difficulty: "easy",
+    image: null,
     servings: 0,
     steps: "",
     is_featured: false,
@@ -42,84 +53,97 @@ const AdminPanel = () => {
     minerals: "",
     author: currentUser?.id || null,
     category: 0,
-    ingredients: [],
+    ingredients: "",
   });
 
-  const [ingredientInput, setIngredientInput] = useState("");
-
+  // Обновление автора при изменении currentUser
   useEffect(() => {
-    if (!currentUser) {
-      toast.error("Пожалуйста, войдите в систему");
-      navigate("/login");
-    }
-  }, [currentUser, navigate]);
-
-  const addIngredient = () => {
-    const trimmed = ingredientInput.trim();
-    if (trimmed && !newRecipe.ingredients.includes(trimmed)) {
-      setNewRecipe({
-        ...newRecipe,
-        ingredients: [...newRecipe.ingredients],
-      });
-      setIngredientInput("");
-    } else {
-      toast.warn("Пустой или уже добавленный ингредиент");
-    }
-  };
-
-  const removeIngredient = (item: string) => {
-    setNewRecipe({
-      ...newRecipe,
-      ingredients: newRecipe.ingredients.filter((ing) => ing !== item),
-    });
-  };
+    setNewRecipe((prev) => ({
+      ...prev,
+      author: currentUser?.id || null,
+    }));
+  }, [currentUser]);
 
   const difficulties = ["easy", "medium", "hard"];
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewRecipe((prev) => ({ ...prev, image: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const validateForm = () => {
+    const requiredFields = {
+      title: "Название",
+      description: "Описание",
+      prep_time: "Время приготовления",
+      servings: "Количество порций",
+      steps: "Шаги приготовления",
+      category: "Категория",
+      ingredients: "Ингредиенты",
+    };
+
+    const emptyFields = Object.entries(requiredFields).filter(
+      ([key, _]) => !newRecipe[key as keyof typeof newRecipe]
+    );
+
+    if (emptyFields.length > 0) {
+      toast.error(
+        `Заполните обязательные поля: ${emptyFields
+          .map(([_, label]) => label)
+          .join(", ")}`
+      );
+      return false;
+    }
+
+    if (!currentUser?.id) {
+      toast.error("Необходимо авторизоваться");
+      return false;
+    }
+
+    return true;
+  };
+
   const submitRecipe = async () => {
-    // if (
-    //   !newRecipe.title.trim() ||
-    //   !newRecipe.description.trim() ||
-    //   !newRecipe.prep_time ||
-    //   !newRecipe.difficulty ||
-    //   !newRecipe.servings ||
-    //   !newRecipe.steps.trim() ||
-    //   !newRecipe.author ||
-    //   !newRecipe.category ||
-    //   newRecipe.ingredients.length === 0
-    // ) {
-    //   toast.error("Пожалуйста, заполните все обязательные поля!");
-    //   return;
-    // }
+    if (!validateForm()) return;
 
     try {
+      const recipeData = {
+        ...newRecipe,
+        prep_time: Number(newRecipe.prep_time),
+        servings: Number(newRecipe.servings),
+        calories: newRecipe.calories || 0,
+        protein: newRecipe.protein || 0,
+        fat: newRecipe.fat || 0,
+        carbohydrates: newRecipe.carbohydrates || 0,
+        author: currentUser.id,
+      };
+
       await axios.post(
-        "http://51.20.52.136/ru/",
-        {
-          ...newRecipe,
-          prep_time: Number(newRecipe.prep_time),
-          servings: Number(newRecipe.servings),
-          calories: newRecipe.calories ? Number(newRecipe.calories) : null,
-          protein: newRecipe.protein ? Number(newRecipe.protein) : null,
-          fat: newRecipe.fat ? Number(newRecipe.fat) : null,
-          carbohydrates: newRecipe.carbohydrates
-            ? Number(newRecipe.carbohydrates)
-            : null,
-        },
+        "http://51.20.52.136/ru/recipe",
+        recipeData,
         {
           headers: {
-            Authorization: `Token ${currentUser?.auth_token}`,
+            Authorization: `Token ${currentUser.auth_token}`,
             "Content-Type": "application/json",
           },
         }
       );
 
       toast.success("Рецепт успешно добавлен!");
+
+      // Сброс формы
       setNewRecipe({
         title: "",
         description: "",
         prep_time: 0,
         difficulty: "easy",
+        image: null,
         servings: 0,
         steps: "",
         is_featured: false,
@@ -129,9 +153,9 @@ const AdminPanel = () => {
         carbohydrates: 0,
         vitamins: "",
         minerals: "",
-        author: currentUser?.id || null,
+        author: currentUser.id,
         category: 0,
-        ingredients: [],
+        ingredients: "",
       });
     } catch (error) {
       console.error(error);
@@ -147,50 +171,75 @@ const AdminPanel = () => {
         type="text"
         placeholder="Название *"
         value={newRecipe.title}
-        onChange={(e) => setNewRecipe({ ...newRecipe, title: e.target.value })}
+        onChange={(e) =>
+          setNewRecipe((prev) => ({ ...prev, title: e.target.value }))
+        }
       />
       <textarea
         placeholder="Описание *"
         value={newRecipe.description}
         onChange={(e) =>
-          setNewRecipe({ ...newRecipe, description: e.target.value })
+          setNewRecipe((prev) => ({ ...prev, description: e.target.value }))
         }
       />
       <input
         type="number"
+        min="1"
         placeholder="Время приготовления (мин) *"
-        value={newRecipe.prep_time}
+        value={newRecipe.prep_time || ""}
         onChange={(e) =>
-          setNewRecipe({ ...newRecipe, prep_time: Number(e.target.value) })
+          setNewRecipe((prev) => ({ ...prev, prep_time: Number(e.target.value) }))
         }
       />
 
       <select
         value={newRecipe.difficulty}
         onChange={(e) =>
-          setNewRecipe({ ...newRecipe, difficulty: e.target.value })
+          setNewRecipe((prev) => ({ ...prev, difficulty: e.target.value }))
         }
       >
         {difficulties.map((level) => (
           <option key={level} value={level}>
-            {level}
+            {level === "easy"
+              ? "Легко"
+              : level === "medium"
+              ? "Средне"
+              : "Сложно"}
           </option>
         ))}
       </select>
 
       <input
+        type="file"
+        accept="image/*"
+        onChange={handleImageChange}
+      />
+      {newRecipe.image && (
+        <img
+          src={newRecipe.image}
+          alt="Preview"
+          style={{
+            width: "200px",
+            marginTop: "10px",
+            borderRadius: "8px",
+          }}
+        />
+      )}
+
+      <input
         type="number"
+        min="1"
         placeholder="Количество порций *"
-        value={newRecipe.servings}
+        value={newRecipe.servings || ""}
         onChange={(e) =>
-          setNewRecipe({ ...newRecipe, servings: Number(e.target.value) })
+          setNewRecipe((prev) => ({ ...prev, servings: Number(e.target.value) }))
         }
       />
 
       <textarea
         placeholder="Шаги приготовления *"
         value={newRecipe.steps}
-        onChange={(e) => setNewRecipe({ ...newRecipe, steps: e.target.value })}
+        onChange={(e) => setNewRecipe((prev) => ({ ...prev, steps: e.target.value }))}
       />
 
       <label>
@@ -198,7 +247,10 @@ const AdminPanel = () => {
           type="checkbox"
           checked={newRecipe.is_featured}
           onChange={() =>
-            setNewRecipe({ ...newRecipe, is_featured: !newRecipe.is_featured })
+            setNewRecipe((prev) => ({
+              ...prev,
+              is_featured: !prev.is_featured,
+            }))
           }
         />
         Рекомендуемый рецепт
@@ -207,36 +259,36 @@ const AdminPanel = () => {
       <input
         type="number"
         placeholder="Калории"
-        value={newRecipe.calories}
+        value={newRecipe.calories || ""}
         onChange={(e) =>
-          setNewRecipe({ ...newRecipe, calories: Number(e.target.value) })
+          setNewRecipe((prev) => ({ ...prev, calories: Number(e.target.value) }))
         }
       />
       <input
         type="number"
         step="0.1"
         placeholder="Белки"
-        value={newRecipe.protein}
+        value={newRecipe.protein || ""}
         onChange={(e) =>
-          setNewRecipe({ ...newRecipe, protein: Number(e.target.value) })
+          setNewRecipe((prev) => ({ ...prev, protein: Number(e.target.value) }))
         }
       />
       <input
         type="number"
         step="0.1"
         placeholder="Жиры"
-        value={newRecipe.fat}
+        value={newRecipe.fat || ""}
         onChange={(e) =>
-          setNewRecipe({ ...newRecipe, fat: Number(e.target.value) })
+          setNewRecipe((prev) => ({ ...prev, fat: Number(e.target.value) }))
         }
       />
       <input
         type="number"
         step="0.1"
         placeholder="Углеводы"
-        value={newRecipe.carbohydrates}
+        value={newRecipe.carbohydrates || ""}
         onChange={(e) =>
-          setNewRecipe({ ...newRecipe, carbohydrates: Number(e.target.value) })
+          setNewRecipe((prev) => ({ ...prev, carbohydrates: Number(e.target.value) }))
         }
       />
       <input
@@ -244,7 +296,7 @@ const AdminPanel = () => {
         placeholder="Витамины"
         value={newRecipe.vitamins}
         onChange={(e) =>
-          setNewRecipe({ ...newRecipe, vitamins: e.target.value })
+          setNewRecipe((prev) => ({ ...prev, vitamins: e.target.value }))
         }
       />
       <input
@@ -252,38 +304,27 @@ const AdminPanel = () => {
         placeholder="Минералы"
         value={newRecipe.minerals}
         onChange={(e) =>
-          setNewRecipe({ ...newRecipe, minerals: e.target.value })
+          setNewRecipe((prev) => ({ ...prev, minerals: e.target.value }))
         }
       />
       <input
         type="number"
         placeholder="ID категории *"
-        value={newRecipe.category}
+        value={newRecipe.category || ""}
         onChange={(e) =>
-          setNewRecipe({ ...newRecipe, category: Number(e.target.value) })
+          setNewRecipe((prev) => ({ ...prev, category: Number(e.target.value) }))
         }
       />
 
       <div>
-        <input
-          type="text"
-          placeholder="Ингредиент"
-          value={ingredientInput}
-          onChange={(e) => setIngredientInput(e.target.value)}
+        <textarea
+          placeholder="Ингредиенты *"
+          value={newRecipe.ingredients}
+          onChange={(e) =>
+            setNewRecipe((prev) => ({ ...prev, ingredients: e.target.value }))
+          }
         />
-        <button type="button" onClick={addIngredient}>
-          Добавить ингредиент
-        </button>
-        <ul>
-          {newRecipe.ingredients.map((item) => (
-            <li key={item}>
-              {item}{" "}
-              <button onClick={() => removeIngredient(item)}>удалить</button>
-            </li>
-          ))}
-        </ul>
       </div>
-
       <button onClick={submitRecipe}>Добавить рецепт</button>
       <ToastContainer />
     </div>
